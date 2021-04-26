@@ -1,0 +1,64 @@
+---
+# tasks file for cachepython
+- name: Get the chip architecture
+  command: uname -a
+  register: chip_arch
+
+- name: Print message about not being able to run on 64 bit architecture
+  debug:
+    msg="The role can only run on 32 bit sustems. See README for more details"
+  when: play
+  when: chip_arch.stdout is search("x86_64")
+
+- name: Quit if the architecture is 64 bit
+  meta: end_play
+  when: chip_arch.stdout is search("x86_64")
+
+- name: Extract cache-perl.tar
+  unarchive:
+    src: files/cache-perl.tar
+    dest: /
+
+- name: Copy the install script
+  copy:
+    src: files/install.sh
+    dest: /tmp/install.sh
+    mode: "0744"
+
+- name: Run the install
+  command: /tmp/install.sh 64
+  when: chip_arch.stdout is search("x86_64")
+
+- name: Run the install
+  command: /tmp/install.sh 32
+  when: chip_arch.stdout is not search("x86_64")
+
+
+- name: copy Perl templates
+  template:
+     src: "{{ item.src }}"
+     dest: "{{ item.dest }}"
+     owner: root
+     group: root
+     mode: "{{ item.mode }}"
+  loop:
+     - { src: "templates/testauto.pl", dest: "/tmp/testauto.pl", mode: "0744" }
+
+
+- name: Verify that the install is working as expected
+  command: "/tmp/testauto.pl"
+  environment:
+    LD_LIBRARY_PATH: "/usr/local/cache-perl/bin"
+  register: outpt
+
+- name: Print the verification output
+  debug: msg="{{ outpt.stdout }}"
+  
+- name: Print whether the install has gone through or not
+  debug: msg="INTERSYSTEMS CACHE PERL BINDING HAS BEEN INSTALLED SUCCESSFULLY"
+  when: outpt.stdout is search("ok 1\nok 2\nok 3")
+
+- name: Print whether the install has gone through or not
+  fail: msg="INTERSYSTEMS CACHE PERL BINDING HAS NOT BEEN INSTALLED SUCCESSFULLY"
+  when: outpt.stdout is not search("ok 1\nok 2\nok 3")
+
