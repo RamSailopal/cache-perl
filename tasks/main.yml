@@ -3,6 +3,7 @@
 - name: Get the chip architecture
   command: uname -a
   register: chip_arch
+  changed_when: chip_arch.stdout is not search("")
 - name: Print message about not being able to run on 64 bit architecture
   debug:
     msg="The role can only run on 32 bit sustems. See README for more details"
@@ -39,8 +40,9 @@
   environment:
     LD_LIBRARY_PATH: "/usr/local/cache-perl/bin"
   register: outpt
+  changed_when: outpt.stdout is not search("")
 - name: Print the verification output
-  debug: msg="{{ outpt.stdout }}"  
+  debug: msg="{{ outpt.stdout }}"
 - name: Print whether the install has gone through or not
   debug: msg="INTERSYSTEMS CACHE PERL BINDING HAS BEEN INSTALLED SUCCESSFULLY"
   when: outpt.stdout is search("ok 1\nok 2\nok 3")
