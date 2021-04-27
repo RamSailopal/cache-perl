@@ -1,17 +1,16 @@
 galaxy_info:
   author: Raman Sailopal
   description: Allows the installation of Perl Bindings for connection to Intersystems Cache
-  company: your company (optional)
 
   license: MIT
 
   min_ansible_version: 2.9
 
   platforms:
-    - name: SuSE
+    - name: SLES
       versions:
       - all
-    - name: RedHat
+    - name: Rhel
       versions:
       - all
 
