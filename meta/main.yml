@@ -10,9 +10,6 @@ galaxy_info:
     - name: SLES
       versions:
       - all
-    - name: Rhel
-      versions:
-      - all
 
   galaxy_tags:
     - intersystems
