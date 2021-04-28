@@ -11,15 +11,43 @@
 - name: Quit if the architecture is 64 bit
   meta: end_play
   when: chip_arch.stdout is search("x86_64")
-- name: Extract cache-perl.tar
+- name: Copy the install script
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0744"
+  loop:
+    - { src: 'files/install.sh', dest: '/tmp/install.sh' }
+- name: Unarchive the tar file
   unarchive:
     src: files/cache-perl.tar
     dest: /
-- name: Copy the install script
-  copy:
-    src: files/install.sh
-    dest: /tmp/install.sh
-    mode: "0744"
+- name: Make sure python-xml is installed to allow for yum and zypper to run through Ansible
+  command: 'zypper install -y python-xml'
+  when: ansible_distribution is search("SUSE")
+  tags:
+    - skip_ansible_lint # Need to install python-xml to get Ansible zypper/yum module to work - Chicken and egg!!
+- name: Make sure python-xml is installed to allow for yum and zypper to run through Ansible
+  command: 'yum install -y python-xml'
+  when: ansible_distribution is not search("SUSE")
+  tags:
+    - skip_ansible_lint # Need to install python-xml to get Ansible zypper/yum module to work - Chicken and egg!!
+- name: Make sure that make and gcc are installed
+  zypper:
+   name: "{{ item }}"
+   state: "present"
+  loop:
+    - make
+    - gcc
+  when: ansible_distribution is search("SUSE")
+- name: Make sure that make and gcc are installed
+  yum:
+   name: "{{ item }}"
+   state: "present"
+  loop:
+    - make
+    - gcc
+  when: ansible_distribution is not search("SUSE")
 - name: Run the install
   command: /tmp/install.sh 64
   when: chip_arch.stdout is search("x86_64")
